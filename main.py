@@ -48,28 +48,28 @@ def main():
     with open("the-verdict.txt", "r", encoding="utf-8") as f:
         raw_text = f.read()
 
-        columns = 8
-        rows = 4
+        batch_size = 8  # amount of phrases per batch
+        max_length = 4  # lenght of a phrase
 
         data_loader = create_dataloader_v1(
-            raw_text, batch_size=rows, max_length=columns, stride=1
+            raw_text, batch_size=batch_size, max_length=max_length, stride=1
         )
+
         data_iter = iter(data_loader)
-        print("Total batches:", len(data_iter))
-        first_batch = next(data_iter)
-        print("Input")
-        print(first_batch[0])
-        print("Target")
-        print(first_batch[1])
+        inputs, targets = next(data_iter)
 
+        # To embedding space
         vocab_size = tiktoken.get_encoding("gpt2").n_vocab
-        print("Vocab size", vocab_size)
-        output_dim = 3
-        torch.manual_seed(123)
-        embedding_layer = torch.nn.Embedding(vocab_size, output_dim)
-        print(embedding_layer.weight)
+        output_dim = 256
 
-        print(embedding_layer(first_batch[0]))
+        token_embedding_layer = torch.nn.Embedding(vocab_size, output_dim)
+        token_embeddings = token_embedding_layer(inputs)
+
+        context_length = max_length
+        pos_embedding_layer = torch.nn.Embedding(context_length, output_dim)
+        pos_embeddings = pos_embedding_layer(torch.arange(context_length))
+
+        input_embeddings = token_embeddings + pos_embeddings
 
 
 if __name__ == "__main__":
